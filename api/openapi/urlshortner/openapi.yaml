@@ -1,0 +1,85 @@
+openapi: 3.1.0
+info:
+  title: URL Shortener API
+  version: 1.0.0
+  description: Сервис для сокращения длинных URL
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер разработки
+
+paths:
+  /shorten:
+    post:
+      summary: Создание короткой ссылки
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShortenRequest"
+      responses:
+        '201':
+          description: Ссылка создана
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShortenResponse"
+        '400':
+          description: Неверный запрос
+        '409':
+          description: Конфликт (пользовательский алиас уже существует)
+
+  /{short_key}:
+    get:
+      summary: Перенаправление на оригинальный URL
+      parameters:
+        - name: short_key
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 10
+            maxLength: 10
+            pattern: "^[a-zA-Z0-9_]{10}$"
+      responses:
+        '302':
+          description: Перенаправление
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        '404':
+          description: Ссылка не найдена
+
+components:
+  schemas:
+    ShortenRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/very/long/url"
+        custom_alias:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: "^[a-zA-Z0-9_]{10}$"
+          example: "my_custom_"
+          nullable: true
+      required:
+        - url
+
+    ShortenResponse:
+      type: object
+      properties:
+        short_url:
+          type: string
+          format: uri
+          example: "http://localhost:8080/Abc123_DeF"
+        original_url:
+          type: string
+          format: uri
+          example: "https://example.com/very/long/url"

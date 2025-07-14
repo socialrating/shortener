@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package urlshortener.v1;
+
+option go_package = "github.com/socialrating/urlshortener/api/proto/urlshortener;urlshortener";
+
+service UrlShortenerService {
+  rpc ShortenUrl(ShortenUrlRequest) returns (ShortenUrlResponse) {}
+  rpc GetOriginalUrl(GetOriginalUrlRequest) returns (GetOriginalUrlResponse) {}
+}
+
+message ShortenUrlRequest {
+  string url = 1;
+}
+
+message ShortenUrlResponse {
+  string short_url = 1;
+  string original_url = 2;
+}
+
+message GetOriginalUrlRequest {
+  string short_key = 1;
+}
+
+message GetOriginalUrlResponse {
+  string original_url = 1;
+}
