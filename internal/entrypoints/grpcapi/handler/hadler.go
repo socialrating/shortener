@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/url"
 
-	pburlshortener "github.com/socialrating/shortener/api/proto/urlshortener"
+	pburlshortener "github.com/socialrating/shortener/api/proto/urlshortner"
 
 	"github.com/socialrating/shortener/internal/storage"
 )
