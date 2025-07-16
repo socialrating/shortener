@@ -1,22 +1,43 @@
 package app
 
 import (
-	"log"
+	"fmt"
 	"net"
 
-	"github.com/socialrating/shortener/internal/storage"
+	pb "github.com/socialrating/shortener/api/proto/urlshortner"
+	"github.com/socialrating/shortener/internal/entrypoints/grpcapi/handler"
+	"github.com/socialrating/shortener/internal/service"
 	"google.golang.org/grpc"
 )
 
-func StartGRPCServer(stor storage.Storage, port string) {
-	lis, err := net.Listen("tcp", ":"+port)
+type GRPCApp struct {
+	port   string
+	server *grpc.Server
+}
+
+func NewGRPCApp(port string, s *service.Service) *GRPCApp {
+	grpcServer := grpc.NewServer()
+	h := handler.NewGRPCHandler(s)
+	pb.RegisterURLShortenerServer(grpcServer, h)
+
+	return &GRPCApp{
+		port:   port,
+		server: grpcServer,
+	}
+}
+
+func (a *GRPCApp) Run() error {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", a.port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to start listening to port %s: %w", a.port, err)
 	}
-	s := grpc.NewServer()
-		// pb.RegisterURLShortenerServer(s, NewServer(stor))
-	log.Printf("gRPC server listening on %s", port)
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+
+	if err := a.server.Serve(lis); err != nil {
+		return fmt.Errorf("gRPC server error: %w", err)
 	}
+	return nil
+}
+
+func (a *GRPCApp) Stop() {
+	a.server.GracefulStop()
 }

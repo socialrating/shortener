@@ -8,87 +8,42 @@ import (
 )
 
 type InMemoryStorage struct {
-	mu        sync.RWMutex
-	urls      map[string]string // shortKey -> originalURL
-	urlToKey  map[string]string // originalURL -> shortKey
-	keyGen    func(string) string
-	keyLength int
+	mu          sync.RWMutex
+	shortToOrig map[string]string
+	origToShort map[string]string
 }
 
-func NewInMemoryStorage() *InMemoryStorage {
+func New() *InMemoryStorage {
 	return &InMemoryStorage{
-		urls:      make(map[string]string),
-		urlToKey:  make(map[string]string),
-		keyLength: 10,
+		shortToOrig: make(map[string]string),
+		origToShort: make(map[string]string),
 	}
 }
 
-func (s *InMemoryStorage) generateKey(url string) string {
-	// Простая реализация для примера
-	hash := fnvHash(url)
-	key := make([]byte, s.keyLength)
-	for i := range key {
-		idx := int(hash) % len(charset)
-		key[i] = charset[idx]
-		hash = hash >> 6
-	}
-	return string(key)
-}
-
-const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
-
-func fnvHash(s string) uint32 {
-	hash := uint32(2166136261)
-	for _, c := range s {
-		hash *= 16777619
-		hash ^= uint32(c)
-	}
-	return hash
-}
-
-func (s *InMemoryStorage) Save(ctx context.Context, originalURL string) (string, error) {
+func (s *InMemoryStorage) SaveURL(ctx context.Context, originalURL string, shortURL string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	// Проверяем, существует ли уже URL
-	if key, exists := s.urlToKey[originalURL]; exists {
-		return key, storage.ErrAlreadyExists
-	}
-
-	// Генерируем уникальный ключ
-	attempt := 0
-	var key string
-	for {
-		key = s.generateKey(originalURL + string(rune(attempt)))
-		if _, exists := s.urls[key]; !exists {
-			break
-		}
-		attempt++
-	}
-
-	// Сохраняем
-	s.urls[key] = originalURL
-	s.urlToKey[originalURL] = key
-
-	return key, nil
+	s.shortToOrig[shortURL] = originalURL
+	s.origToShort[originalURL] = shortURL
+	return nil
 }
 
-func (s *InMemoryStorage) Get(ctx context.Context, shortKey string) (string, error) {
+func (s *InMemoryStorage) GetURL(ctx context.Context, shortURL string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-
-	if len(shortKey) != s.keyLength {
-		return "", storage.ErrNotFound
+	originalURL, ok := s.shortToOrig[shortURL]
+	if !ok {
+		return "", storage.ErrURLNotFound
 	}
-
-	url, exists := s.urls[shortKey]
-	if !exists {
-		return "", storage.ErrNotFound
-	}
-
-	return url, nil
+	return originalURL, nil
 }
 
-func (s *InMemoryStorage) Close() error {
-	return nil
+func (s *InMemoryStorage) GetShortURL(ctx context.Context, originalURL string) (string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	shortURL, ok := s.origToShort[originalURL]
+	if !ok {
+		return "", storage.ErrURLNotFound
+	}
+	return shortURL, nil
 }

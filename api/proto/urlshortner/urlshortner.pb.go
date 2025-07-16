@@ -21,167 +21,163 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ShortenUrlRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Url           string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ShortenUrlRequest) Reset() {
-	*x = ShortenUrlRequest{}
-	mi := &file_urlshortner_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ShortenUrlRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ShortenUrlRequest) ProtoMessage() {}
-
-func (x *ShortenUrlRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_urlshortner_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ShortenUrlRequest.ProtoReflect.Descriptor instead.
-func (*ShortenUrlRequest) Descriptor() ([]byte, []int) {
-	return file_urlshortner_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *ShortenUrlRequest) GetUrl() string {
-	if x != nil {
-		return x.Url
-	}
-	return ""
-}
-
-type ShortenUrlResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShortUrl      string                 `protobuf:"bytes,1,opt,name=short_url,json=shortUrl,proto3" json:"short_url,omitempty"`
-	OriginalUrl   string                 `protobuf:"bytes,2,opt,name=original_url,json=originalUrl,proto3" json:"original_url,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ShortenUrlResponse) Reset() {
-	*x = ShortenUrlResponse{}
-	mi := &file_urlshortner_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ShortenUrlResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ShortenUrlResponse) ProtoMessage() {}
-
-func (x *ShortenUrlResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_urlshortner_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ShortenUrlResponse.ProtoReflect.Descriptor instead.
-func (*ShortenUrlResponse) Descriptor() ([]byte, []int) {
-	return file_urlshortner_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *ShortenUrlResponse) GetShortUrl() string {
-	if x != nil {
-		return x.ShortUrl
-	}
-	return ""
-}
-
-func (x *ShortenUrlResponse) GetOriginalUrl() string {
-	if x != nil {
-		return x.OriginalUrl
-	}
-	return ""
-}
-
-type GetOriginalUrlRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ShortKey      string                 `protobuf:"bytes,1,opt,name=short_key,json=shortKey,proto3" json:"short_key,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetOriginalUrlRequest) Reset() {
-	*x = GetOriginalUrlRequest{}
-	mi := &file_urlshortner_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetOriginalUrlRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetOriginalUrlRequest) ProtoMessage() {}
-
-func (x *GetOriginalUrlRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_urlshortner_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetOriginalUrlRequest.ProtoReflect.Descriptor instead.
-func (*GetOriginalUrlRequest) Descriptor() ([]byte, []int) {
-	return file_urlshortner_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *GetOriginalUrlRequest) GetShortKey() string {
-	if x != nil {
-		return x.ShortKey
-	}
-	return ""
-}
-
-type GetOriginalUrlResponse struct {
+// Запрос на создание короткой ссылки
+type CreateShortURLRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	OriginalUrl   string                 `protobuf:"bytes,1,opt,name=original_url,json=originalUrl,proto3" json:"original_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetOriginalUrlResponse) Reset() {
-	*x = GetOriginalUrlResponse{}
+func (x *CreateShortURLRequest) Reset() {
+	*x = CreateShortURLRequest{}
+	mi := &file_urlshortner_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateShortURLRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateShortURLRequest) ProtoMessage() {}
+
+func (x *CreateShortURLRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_urlshortner_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateShortURLRequest.ProtoReflect.Descriptor instead.
+func (*CreateShortURLRequest) Descriptor() ([]byte, []int) {
+	return file_urlshortner_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *CreateShortURLRequest) GetOriginalUrl() string {
+	if x != nil {
+		return x.OriginalUrl
+	}
+	return ""
+}
+
+// Ответ с созданной короткой ссылкой
+type CreateShortURLResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ShortUrl      string                 `protobuf:"bytes,1,opt,name=short_url,json=shortUrl,proto3" json:"short_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateShortURLResponse) Reset() {
+	*x = CreateShortURLResponse{}
+	mi := &file_urlshortner_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateShortURLResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateShortURLResponse) ProtoMessage() {}
+
+func (x *CreateShortURLResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_urlshortner_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateShortURLResponse.ProtoReflect.Descriptor instead.
+func (*CreateShortURLResponse) Descriptor() ([]byte, []int) {
+	return file_urlshortner_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *CreateShortURLResponse) GetShortUrl() string {
+	if x != nil {
+		return x.ShortUrl
+	}
+	return ""
+}
+
+// Запрос на получение оригинальной ссылки
+type GetOriginalURLRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ShortUrl      string                 `protobuf:"bytes,1,opt,name=short_url,json=shortUrl,proto3" json:"short_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOriginalURLRequest) Reset() {
+	*x = GetOriginalURLRequest{}
+	mi := &file_urlshortner_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetOriginalURLRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetOriginalURLRequest) ProtoMessage() {}
+
+func (x *GetOriginalURLRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_urlshortner_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetOriginalURLRequest.ProtoReflect.Descriptor instead.
+func (*GetOriginalURLRequest) Descriptor() ([]byte, []int) {
+	return file_urlshortner_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetOriginalURLRequest) GetShortUrl() string {
+	if x != nil {
+		return x.ShortUrl
+	}
+	return ""
+}
+
+// Ответ с оригинальной ссылкой
+type GetOriginalURLResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OriginalUrl   string                 `protobuf:"bytes,1,opt,name=original_url,json=originalUrl,proto3" json:"original_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetOriginalURLResponse) Reset() {
+	*x = GetOriginalURLResponse{}
 	mi := &file_urlshortner_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetOriginalUrlResponse) String() string {
+func (x *GetOriginalURLResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetOriginalUrlResponse) ProtoMessage() {}
+func (*GetOriginalURLResponse) ProtoMessage() {}
 
-func (x *GetOriginalUrlResponse) ProtoReflect() protoreflect.Message {
+func (x *GetOriginalURLResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_urlshortner_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -193,12 +189,12 @@ func (x *GetOriginalUrlResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetOriginalUrlResponse.ProtoReflect.Descriptor instead.
-func (*GetOriginalUrlResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetOriginalURLResponse.ProtoReflect.Descriptor instead.
+func (*GetOriginalURLResponse) Descriptor() ([]byte, []int) {
 	return file_urlshortner_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetOriginalUrlResponse) GetOriginalUrl() string {
+func (x *GetOriginalURLResponse) GetOriginalUrl() string {
 	if x != nil {
 		return x.OriginalUrl
 	}
@@ -209,20 +205,18 @@ var File_urlshortner_proto protoreflect.FileDescriptor
 
 const file_urlshortner_proto_rawDesc = "" +
 	"\n" +
-	"\x11urlshortner.proto\x12\x0furlshortener.v1\"%\n" +
-	"\x11ShortenUrlRequest\x12\x10\n" +
-	"\x03url\x18\x01 \x01(\tR\x03url\"T\n" +
-	"\x12ShortenUrlResponse\x12\x1b\n" +
-	"\tshort_url\x18\x01 \x01(\tR\bshortUrl\x12!\n" +
-	"\foriginal_url\x18\x02 \x01(\tR\voriginalUrl\"4\n" +
-	"\x15GetOriginalUrlRequest\x12\x1b\n" +
-	"\tshort_key\x18\x01 \x01(\tR\bshortKey\";\n" +
-	"\x16GetOriginalUrlResponse\x12!\n" +
-	"\foriginal_url\x18\x01 \x01(\tR\voriginalUrl2\xd3\x01\n" +
-	"\x13UrlShortenerService\x12W\n" +
-	"\n" +
-	"ShortenUrl\x12\".urlshortener.v1.ShortenUrlRequest\x1a#.urlshortener.v1.ShortenUrlResponse\"\x00\x12c\n" +
-	"\x0eGetOriginalUrl\x12&.urlshortener.v1.GetOriginalUrlRequest\x1a'.urlshortener.v1.GetOriginalUrlResponse\"\x00BJZHgithub.com/socialrating/urlshortener/api/proto/urlshortener;urlshortenerb\x06proto3"
+	"\x11urlshortner.proto\x12\x0furlshortener.v1\":\n" +
+	"\x15CreateShortURLRequest\x12!\n" +
+	"\foriginal_url\x18\x01 \x01(\tR\voriginalUrl\"5\n" +
+	"\x16CreateShortURLResponse\x12\x1b\n" +
+	"\tshort_url\x18\x01 \x01(\tR\bshortUrl\"4\n" +
+	"\x15GetOriginalURLRequest\x12\x1b\n" +
+	"\tshort_url\x18\x01 \x01(\tR\bshortUrl\";\n" +
+	"\x16GetOriginalURLResponse\x12!\n" +
+	"\foriginal_url\x18\x01 \x01(\tR\voriginalUrl2\xd4\x01\n" +
+	"\fURLShortener\x12a\n" +
+	"\x0eCreateShortURL\x12&.urlshortener.v1.CreateShortURLRequest\x1a'.urlshortener.v1.CreateShortURLResponse\x12a\n" +
+	"\x0eGetOriginalURL\x12&.urlshortener.v1.GetOriginalURLRequest\x1a'.urlshortener.v1.GetOriginalURLResponseBJZHgithub.com/socialrating/urlshortener/api/proto/urlshortener;urlshortenerb\x06proto3"
 
 var (
 	file_urlshortner_proto_rawDescOnce sync.Once
@@ -238,16 +232,16 @@ func file_urlshortner_proto_rawDescGZIP() []byte {
 
 var file_urlshortner_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_urlshortner_proto_goTypes = []any{
-	(*ShortenUrlRequest)(nil),      // 0: urlshortener.v1.ShortenUrlRequest
-	(*ShortenUrlResponse)(nil),     // 1: urlshortener.v1.ShortenUrlResponse
-	(*GetOriginalUrlRequest)(nil),  // 2: urlshortener.v1.GetOriginalUrlRequest
-	(*GetOriginalUrlResponse)(nil), // 3: urlshortener.v1.GetOriginalUrlResponse
+	(*CreateShortURLRequest)(nil),  // 0: urlshortener.v1.CreateShortURLRequest
+	(*CreateShortURLResponse)(nil), // 1: urlshortener.v1.CreateShortURLResponse
+	(*GetOriginalURLRequest)(nil),  // 2: urlshortener.v1.GetOriginalURLRequest
+	(*GetOriginalURLResponse)(nil), // 3: urlshortener.v1.GetOriginalURLResponse
 }
 var file_urlshortner_proto_depIdxs = []int32{
-	0, // 0: urlshortener.v1.UrlShortenerService.ShortenUrl:input_type -> urlshortener.v1.ShortenUrlRequest
-	2, // 1: urlshortener.v1.UrlShortenerService.GetOriginalUrl:input_type -> urlshortener.v1.GetOriginalUrlRequest
-	1, // 2: urlshortener.v1.UrlShortenerService.ShortenUrl:output_type -> urlshortener.v1.ShortenUrlResponse
-	3, // 3: urlshortener.v1.UrlShortenerService.GetOriginalUrl:output_type -> urlshortener.v1.GetOriginalUrlResponse
+	0, // 0: urlshortener.v1.URLShortener.CreateShortURL:input_type -> urlshortener.v1.CreateShortURLRequest
+	2, // 1: urlshortener.v1.URLShortener.GetOriginalURL:input_type -> urlshortener.v1.GetOriginalURLRequest
+	1, // 2: urlshortener.v1.URLShortener.CreateShortURL:output_type -> urlshortener.v1.CreateShortURLResponse
+	3, // 3: urlshortener.v1.URLShortener.GetOriginalURL:output_type -> urlshortener.v1.GetOriginalURLResponse
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

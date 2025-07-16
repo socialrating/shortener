@@ -6,12 +6,11 @@ import (
 )
 
 var (
-	ErrNotFound      = errors.New("ссылка не найдена")
-	ErrAlreadyExists = errors.New("ссылка уже существует")
+	ErrURLNotFound = errors.New("url not found")
 )
 
 type Storage interface {
-	Save(ctx context.Context, originalURL string) (string, error)
-	Get(ctx context.Context, shortKey string) (string, error)
-	Close() error
+	SaveURL(ctx context.Context, originalURL string, shortURL string) error
+	GetURL(ctx context.Context, shortURL string) (string, error)
+	GetShortURL(ctx context.Context, originalURL string) (string, error)
 }

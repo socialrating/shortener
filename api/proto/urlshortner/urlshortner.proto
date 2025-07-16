@@ -4,24 +4,30 @@ package urlshortener.v1;
 
 option go_package = "github.com/socialrating/urlshortener/api/proto/urlshortener;urlshortener";
 
-service UrlShortenerService {
-  rpc ShortenUrl(ShortenUrlRequest) returns (ShortenUrlResponse) {}
-  rpc GetOriginalUrl(GetOriginalUrlRequest) returns (GetOriginalUrlResponse) {}
+// Сервис для работы с URL
+service URLShortener {
+  // Создает короткую ссылку
+  rpc CreateShortURL(CreateShortURLRequest) returns (CreateShortURLResponse);
+  // Получает оригинальную ссылку
+  rpc GetOriginalURL(GetOriginalURLRequest) returns (GetOriginalURLResponse);
 }
 
-message ShortenUrlRequest {
-  string url = 1;
+// Запрос на создание короткой ссылки
+message CreateShortURLRequest {
+  string original_url = 1;
 }
 
-message ShortenUrlResponse {
+// Ответ с созданной короткой ссылкой
+message CreateShortURLResponse {
   string short_url = 1;
-  string original_url = 2;
 }
 
-message GetOriginalUrlRequest {
-  string short_key = 1;
+// Запрос на получение оригинальной ссылки
+message GetOriginalURLRequest {
+  string short_url = 1;
 }
 
-message GetOriginalUrlResponse {
+// Ответ с оригинальной ссылкой
+message GetOriginalURLResponse {
   string original_url = 1;
 }

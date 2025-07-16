@@ -1,8 +1,7 @@
-server:
-  http_port: "8080"
-  grpc_port: "50051"
-
+http_server:
+  port: "8080"
+grpc_server:
+  port: "9090"
 storage:
-  type: "inmemory"
-  postgres:
-    url: "postgres://user:password@localhost/urlshortener?sslmode=disable"
+  type: "in-memory"
+  postgres_url: "postgres://user:password@localhost:5432/shortener_db"

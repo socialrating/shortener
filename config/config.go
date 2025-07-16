@@ -25,16 +25,15 @@ func LoadConfig(path string) (*Config, error) {
 
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("не удалось открыть файл конфигурации: %w", err)
+		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
 	defer file.Close()
 
 	decoder := yaml.NewDecoder(file)
 	if err := decoder.Decode(config); err != nil {
-		return nil, fmt.Errorf("не удалось декодировать конфигурацию: %w", err)
+		return nil, fmt.Errorf("failed to decode configuration: %w", err)
 	}
 
-	// Установка значений по умолчанию
 	if config.Server.HTTPPort == "" {
 		config.Server.HTTPPort = "8080"
 	}
