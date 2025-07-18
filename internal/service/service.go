@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"strings"
 
 	"github.com/socialrating/shortener/internal/storage"
@@ -12,6 +13,10 @@ import (
 type Service struct {
 	storage storage.Storage
 }
+
+var (
+	ErrInvalidURL    = errors.New("invalid URL format")
+)
 
 func New(s storage.Storage) *Service {
 	return &Service{storage: s}

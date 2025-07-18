@@ -1,7 +1,0 @@
-http_server:
-  port: "8080"
-grpc_server:
-  port: "9090"
-storage:
-  type: "in-memory"
-  postgres_url: "postgres://user:password@localhost:5432/shortener_db"

@@ -9,22 +9,21 @@ import (
 )
 
 type RestApp struct {
-	port string
 	*http.Server
+	port string
 }
 
 func NewRestApp(port string, s *service.Service) *RestApp {
 	h := handler.NewRestHandler(s)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /", h.CreateShortURL)
-	mux.HandleFunc("GET /{short_url}", h.GetOriginalURL)
+	server := &http.Server{
+		Addr: fmt.Sprintf(":%s", port),
+	}
+
+	h.Register(server)
 
 	return &RestApp{
-		port: port,
-		Server: &http.Server{
-			Addr:    fmt.Sprintf(":%s", port),
-			Handler: mux,
-		},
+		port:   port,
+		Server: server,
 	}
 }

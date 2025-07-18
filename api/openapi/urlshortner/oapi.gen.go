@@ -14,22 +14,37 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
+	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 )
 
-// ShortenRequest defines model for ShortenRequest.
-type ShortenRequest struct {
-	OriginalUrl string `json:"original_url"`
+// ErrorResponse defines model for ErrorResponse.
+type ErrorResponse struct {
+	Error *string `json:"error,omitempty"`
 }
 
-// ShortenResponse defines model for ShortenResponse.
-type ShortenResponse struct {
-	ShortUrl *string `json:"short_url,omitempty"`
+// ShortUrlRequest defines model for ShortUrlRequest.
+type ShortUrlRequest struct {
+	// Url Исходная длинная ссылка
+	Url string `json:"url"`
 }
 
-// PostShortenJSONRequestBody defines body for PostShorten for application/json ContentType.
-type PostShortenJSONRequestBody = ShortenRequest
+// ShortUrlResponse defines model for ShortUrlResponse.
+type ShortUrlResponse struct {
+	// ExpiresAt Время истечения срока действия, если применимо
+	ExpiresAt *time.Time `json:"expires_at"`
+
+	// FullShortUrl Полный сокращённый URL
+	FullShortUrl string `json:"full_short_url"`
+
+	// ShortUrl Код короткой ссылки
+	ShortUrl string `json:"short_url"`
+}
+
+// PostUrlJSONRequestBody defines body for PostUrl for application/json ContentType.
+type PostUrlJSONRequestBody = ShortUrlRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -104,14 +119,17 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// PostShortenWithBody request with any body
-	PostShortenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostUrlWithBody request with any body
+	PostUrlWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostShorten(ctx context.Context, body PostShortenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostUrl(ctx context.Context, body PostUrlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetShortUrl request
+	GetShortUrl(ctx context.Context, shortUrl string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) PostShortenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostShortenRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostUrlWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUrlRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +140,8 @@ func (c *Client) PostShortenWithBody(ctx context.Context, contentType string, bo
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostShorten(ctx context.Context, body PostShortenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostShortenRequest(c.Server, body)
+func (c *Client) PostUrl(ctx context.Context, body PostUrlJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUrlRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -134,19 +152,31 @@ func (c *Client) PostShorten(ctx context.Context, body PostShortenJSONRequestBod
 	return c.Client.Do(req)
 }
 
-// NewPostShortenRequest calls the generic PostShorten builder with application/json body
-func NewPostShortenRequest(server string, body PostShortenJSONRequestBody) (*http.Request, error) {
+func (c *Client) GetShortUrl(ctx context.Context, shortUrl string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetShortUrlRequest(c.Server, shortUrl)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NewPostUrlRequest calls the generic PostUrl builder with application/json body
+func NewPostUrlRequest(server string, body PostUrlJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostShortenRequestWithBody(server, "application/json", bodyReader)
+	return NewPostUrlRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostShortenRequestWithBody generates requests for PostShorten with any type of body
-func NewPostShortenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostUrlRequestWithBody generates requests for PostUrl with any type of body
+func NewPostUrlRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -154,7 +184,7 @@ func NewPostShortenRequestWithBody(server string, contentType string, body io.Re
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/shorten")
+	operationPath := fmt.Sprintf("/url")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -170,6 +200,40 @@ func NewPostShortenRequestWithBody(server string, contentType string, body io.Re
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetShortUrlRequest generates requests for GetShortUrl
+func NewGetShortUrlRequest(server string, shortUrl string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "short_url", runtime.ParamLocationPath, shortUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -217,20 +281,25 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// PostShortenWithBodyWithResponse request with any body
-	PostShortenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostShortenResponse, error)
+	// PostUrlWithBodyWithResponse request with any body
+	PostUrlWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUrlResponse, error)
 
-	PostShortenWithResponse(ctx context.Context, body PostShortenJSONRequestBody, reqEditors ...RequestEditorFn) (*PostShortenResponse, error)
+	PostUrlWithResponse(ctx context.Context, body PostUrlJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUrlResponse, error)
+
+	// GetShortUrlWithResponse request
+	GetShortUrlWithResponse(ctx context.Context, shortUrl string, reqEditors ...RequestEditorFn) (*GetShortUrlResponse, error)
 }
 
-type PostShortenResponse struct {
+type PostUrlResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *ShortenResponse
+	JSON200      *ShortUrlResponse
+	JSON400      *ErrorResponse
+	JSON500      *ErrorResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostShortenResponse) Status() string {
+func (r PostUrlResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -238,50 +307,137 @@ func (r PostShortenResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostShortenResponse) StatusCode() int {
+func (r PostUrlResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// PostShortenWithBodyWithResponse request with arbitrary body returning *PostShortenResponse
-func (c *ClientWithResponses) PostShortenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostShortenResponse, error) {
-	rsp, err := c.PostShortenWithBody(ctx, contentType, body, reqEditors...)
+type GetShortUrlResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *ErrorResponse
+	JSON410      *ErrorResponse
+	JSON500      *ErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetShortUrlResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetShortUrlResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// PostUrlWithBodyWithResponse request with arbitrary body returning *PostUrlResponse
+func (c *ClientWithResponses) PostUrlWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUrlResponse, error) {
+	rsp, err := c.PostUrlWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostShortenResponse(rsp)
+	return ParsePostUrlResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostShortenWithResponse(ctx context.Context, body PostShortenJSONRequestBody, reqEditors ...RequestEditorFn) (*PostShortenResponse, error) {
-	rsp, err := c.PostShorten(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostUrlWithResponse(ctx context.Context, body PostUrlJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUrlResponse, error) {
+	rsp, err := c.PostUrl(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostShortenResponse(rsp)
+	return ParsePostUrlResponse(rsp)
 }
 
-// ParsePostShortenResponse parses an HTTP response from a PostShortenWithResponse call
-func ParsePostShortenResponse(rsp *http.Response) (*PostShortenResponse, error) {
+// GetShortUrlWithResponse request returning *GetShortUrlResponse
+func (c *ClientWithResponses) GetShortUrlWithResponse(ctx context.Context, shortUrl string, reqEditors ...RequestEditorFn) (*GetShortUrlResponse, error) {
+	rsp, err := c.GetShortUrl(ctx, shortUrl, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetShortUrlResponse(rsp)
+}
+
+// ParsePostUrlResponse parses an HTTP response from a PostUrlWithResponse call
+func ParsePostUrlResponse(rsp *http.Response) (*PostUrlResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostShortenResponse{
+	response := &PostUrlResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest ShortenResponse
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ShortUrlResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
-		response.JSON201 = &dest
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetShortUrlResponse parses an HTTP response from a GetShortUrlWithResponse call
+func ParseGetShortUrlResponse(rsp *http.Response) (*GetShortUrlResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetShortUrlResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 410:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON410 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 
@@ -290,9 +446,12 @@ func ParsePostShortenResponse(rsp *http.Response) (*PostShortenResponse, error) 
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Create a short URL
-	// (POST /shorten)
-	PostShorten(w http.ResponseWriter, r *http.Request)
+	// Создать короткий URL
+	// (POST /url)
+	PostUrl(w http.ResponseWriter, r *http.Request)
+	// Перенаправить по короткой ссылке на оригинал
+	// (GET /{short_url})
+	GetShortUrl(w http.ResponseWriter, r *http.Request, shortUrl string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -304,11 +463,36 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// PostShorten operation middleware
-func (siw *ServerInterfaceWrapper) PostShorten(w http.ResponseWriter, r *http.Request) {
+// PostUrl operation middleware
+func (siw *ServerInterfaceWrapper) PostUrl(w http.ResponseWriter, r *http.Request) {
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostShorten(w, r)
+		siw.Handler.PostUrl(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetShortUrl operation middleware
+func (siw *ServerInterfaceWrapper) GetShortUrl(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "short_url" -------------
+	var shortUrl string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "short_url", r.PathValue("short_url"), &shortUrl, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "short_url", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetShortUrl(w, r, shortUrl)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -438,33 +622,104 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
-	m.HandleFunc("POST "+options.BaseURL+"/shorten", wrapper.PostShorten)
+	m.HandleFunc("POST "+options.BaseURL+"/url", wrapper.PostUrl)
+	m.HandleFunc("GET "+options.BaseURL+"/{short_url}", wrapper.GetShortUrl)
 
 	return m
 }
 
-type PostShortenRequestObject struct {
-	Body *PostShortenJSONRequestBody
+type PostUrlRequestObject struct {
+	Body *PostUrlJSONRequestBody
 }
 
-type PostShortenResponseObject interface {
-	VisitPostShortenResponse(w http.ResponseWriter) error
+type PostUrlResponseObject interface {
+	VisitPostUrlResponse(w http.ResponseWriter) error
 }
 
-type PostShorten201JSONResponse ShortenResponse
+type PostUrl200JSONResponse ShortUrlResponse
 
-func (response PostShorten201JSONResponse) VisitPostShortenResponse(w http.ResponseWriter) error {
+func (response PostUrl200JSONResponse) VisitPostUrlResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostUrl400JSONResponse ErrorResponse
+
+func (response PostUrl400JSONResponse) VisitPostUrlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostUrl500JSONResponse ErrorResponse
+
+func (response PostUrl500JSONResponse) VisitPostUrlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetShortUrlRequestObject struct {
+	ShortUrl string `json:"short_url"`
+}
+
+type GetShortUrlResponseObject interface {
+	VisitGetShortUrlResponse(w http.ResponseWriter) error
+}
+
+type GetShortUrl307ResponseHeaders struct {
+	Location string
+}
+
+type GetShortUrl307Response struct {
+	Headers GetShortUrl307ResponseHeaders
+}
+
+func (response GetShortUrl307Response) VisitGetShortUrlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Location", fmt.Sprint(response.Headers.Location))
+	w.WriteHeader(307)
+	return nil
+}
+
+type GetShortUrl404JSONResponse ErrorResponse
+
+func (response GetShortUrl404JSONResponse) VisitGetShortUrlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetShortUrl410JSONResponse ErrorResponse
+
+func (response GetShortUrl410JSONResponse) VisitGetShortUrlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(410)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetShortUrl500JSONResponse ErrorResponse
+
+func (response GetShortUrl500JSONResponse) VisitGetShortUrlResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-	// Create a short URL
-	// (POST /shorten)
-	PostShorten(ctx context.Context, request PostShortenRequestObject) (PostShortenResponseObject, error)
+	// Создать короткий URL
+	// (POST /url)
+	PostUrl(ctx context.Context, request PostUrlRequestObject) (PostUrlResponseObject, error)
+	// Перенаправить по короткой ссылке на оригинал
+	// (GET /{short_url})
+	GetShortUrl(ctx context.Context, request GetShortUrlRequestObject) (GetShortUrlResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -496,11 +751,11 @@ type strictHandler struct {
 	options     StrictHTTPServerOptions
 }
 
-// PostShorten operation middleware
-func (sh *strictHandler) PostShorten(w http.ResponseWriter, r *http.Request) {
-	var request PostShortenRequestObject
+// PostUrl operation middleware
+func (sh *strictHandler) PostUrl(w http.ResponseWriter, r *http.Request) {
+	var request PostUrlRequestObject
 
-	var body PostShortenJSONRequestBody
+	var body PostUrlJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
 		return
@@ -508,18 +763,44 @@ func (sh *strictHandler) PostShorten(w http.ResponseWriter, r *http.Request) {
 	request.Body = &body
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.PostShorten(ctx, request.(PostShortenRequestObject))
+		return sh.ssi.PostUrl(ctx, request.(PostUrlRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostShorten")
+		handler = middleware(handler, "PostUrl")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(PostShortenResponseObject); ok {
-		if err := validResponse.VisitPostShortenResponse(w); err != nil {
+	} else if validResponse, ok := response.(PostUrlResponseObject); ok {
+		if err := validResponse.VisitPostUrlResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetShortUrl operation middleware
+func (sh *strictHandler) GetShortUrl(w http.ResponseWriter, r *http.Request, shortUrl string) {
+	var request GetShortUrlRequestObject
+
+	request.ShortUrl = shortUrl
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetShortUrl(ctx, request.(GetShortUrlRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetShortUrl")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetShortUrlResponseObject); ok {
+		if err := validResponse.VisitGetShortUrlResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

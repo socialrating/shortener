@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
-	"io"
+	"context"
+	"errors"
 	"net/http"
 
+	api "github.com/socialrating/shortener/api/openapi/urlshortner"
 	"github.com/socialrating/shortener/internal/service"
 )
 
@@ -12,47 +13,69 @@ type RestHandler struct {
 	service *service.Service
 }
 
+var _ api.StrictServerInterface = (*RestHandler)(nil)
+
 func NewRestHandler(s *service.Service) *RestHandler {
 	return &RestHandler{service: s}
 }
 
-func (h *RestHandler) CreateShortURL(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Cannot read body", http.StatusBadRequest)
-		return
-	}
+func (h *RestHandler) Register(server *http.Server) {
+	// Создаем обработчик сгенерированного OAPI
+	handler := api.NewStrictHandler(h,nil)
 
-	var request struct {
-		URL string `json:"url"`
-	}
+	// Создаем стандартный роутер
+	mux := http.NewServeMux()
 
-	if err := json.Unmarshal(body, &request); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
+	// Регистрируем маршруты на mux
+	api.HandlerFromMux(handler, mux)
 
-	shortURL, err := h.service.CreateShortURL(r.Context(), request.URL)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	response := struct {
-		ShortURL string `json:"short_url"`
-	}{ShortURL: shortURL}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	// Устанавливаем mux как основной обработчик сервера
+	server.Handler = mux
 }
 
-func (h *RestHandler) GetOriginalURL(w http.ResponseWriter, r *http.Request) {
-	shortURL := r.URL.Path[1:]
-	originalURL, err := h.service.GetOriginalURL(r.Context(), shortURL)
-	if err != nil {
-		http.NotFound(w, r)
-		return
+func (h *RestHandler) PostUrl(ctx context.Context, request api.PostUrlRequestObject) (api.PostUrlResponseObject, error) {
+	if request.Body.Url == "" {
+		errMsg := "URL is required"
+		return api.PostUrl400JSONResponse{
+			Error: &errMsg,
+		}, nil
 	}
 
-	http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
+	shortURL, err := h.service.CreateShortURL(ctx, request.Body.Url)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidURL):
+			errMsg := "Invalid URL format"
+			return api.PostUrl400JSONResponse{
+				Error: &errMsg,
+			}, nil
+		default:
+			errMsg := "Internal server error"
+			return api.PostUrl500JSONResponse{
+				Error: &errMsg,
+			}, nil
+		}
+	}
+
+	return api.PostUrl200JSONResponse{
+		ShortUrl: shortURL,
+	}, nil
+}
+
+func (h *RestHandler) GetShortUrl(ctx context.Context, request api.GetShortUrlRequestObject) (api.GetShortUrlResponseObject, error) {
+	if request.ShortUrl == "" {
+		errMsg := "short_url parameter is required"
+		return api.GetShortUrl404JSONResponse{Error: &errMsg}, nil
+	}
+
+	originalURL, err := h.service.GetOriginalURL(ctx, request.ShortUrl)
+	if err != nil {
+		errMsg := "Internal server error"
+		return api.GetShortUrl500JSONResponse{Error: &errMsg}, nil
+	}
+	return api.GetShortUrl307Response{
+		Headers: api.GetShortUrl307ResponseHeaders{
+			Location: originalURL,
+		},
+	}, nil
 }

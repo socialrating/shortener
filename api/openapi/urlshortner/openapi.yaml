@@ -1,46 +1,108 @@
 openapi: 3.1.0
 info:
   title: URL Shortener API
-  version: 1.0.0
+  version: "1.0.0"
 paths:
   /url:
     post:
-      summary: Create a short URL
+      summary: Создать короткий URL
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                url:
-                  type: string
-                  example: "https://example.com/very/long/url/to/shorten"
-              required:
-                - url
+              $ref: '#/components/schemas/ShortUrlRequest'
       responses:
         '200':
-          description: Short URL created successfully
+          description: Успешно создан короткий URL
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  short_url:
-                    type: string
-                    example: "aB_1cD2eF3"
+                $ref: '#/components/schemas/ShortUrlResponse'
+        '400':
+          description: Ошибка запроса — некорректная входная ссылка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /{short_url}:
     get:
-      summary: Get original URL
+      summary: Перенаправить по короткой ссылке на оригинал
       parameters:
         - name: short_url
           in: path
           required: true
           schema:
             type: string
-            example: "aB_1cD2eF3"
+          description: Код короткой ссылки
       responses:
         '307':
-          description: Temporary Redirect to the original URL.
+          description: Временный редирект на оригинальный URL
+          headers:
+            Location:
+              description: Оригинальный URL (для редиректа)
+              schema:
+                type: string
+                format: uri
         '404':
-          description: Short URL not found.
+          description: Короткая ссылка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: Короткая ссылка истекла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ShortUrlRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Исходная длинная ссылка
+          example: "https://example.com/very/long/url/to/shorten"
+      required:
+        - url
+    ShortUrlResponse:
+      type: object
+      properties:
+        short_url:
+          type: string
+          description: Код короткой ссылки
+          example: "aB_1cD2eF3"
+        full_short_url:
+          type: string
+          format: uri
+          description: Полный сокращённый URL
+          example: "https://sho.rt/aB_1cD2eF3"
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Время истечения срока действия, если применимо
+      required:
+        - short_url
+        - full_short_url
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Internal server error"
